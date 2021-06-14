@@ -82,4 +82,4 @@ const products = [
   // export default products
   
   // so we will convert to modern js 
-  module.exports = products
+export default products
