@@ -1,13 +1,25 @@
-import React from 'react'
+import React,{useState,useEffect } from 'react'
 import {Link} from 'react-router-dom'
-import {Container,Row,Col, ListGroup,Card,Button,Image, ListGroupItem} from 'react-bootstrap'
+import {Row,Col, ListGroup,Card,Button,Image, ListGroupItem} from 'react-bootstrap'
 import Rating from '../components/Rating'
-import products from '../products'
-
+import axios from 'axios'
 const ProductScreen = ({match}) => {
 
-    const product = products.find((p) => p._id=== match.params.id)
-    
+//   fetching it(products) from backend // 
+   const[product,setProduct]=useState({})
+
+    // whatever we put inside this runs as soon as the component loads 
+    useEffect(() => {
+      const fetchProduct = async() => {
+       const {data}=await axios.get(`/api/products/${match.params.id}`)
+      // change from empty array of useStaate 
+      setProduct(data)
+      }
+      fetchProduct()
+      // use array of dependencies i.e anthing that you want to fire use effect off when it changes 
+  }, [match])
+
+   
     return (
         <>
         {/* for go back button to the main page */}
