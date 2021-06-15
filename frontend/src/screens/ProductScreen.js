@@ -1,32 +1,55 @@
-import React,{useState,useEffect } from 'react'
+import React,{useState, useEffect } from 'react'
 import {Link} from 'react-router-dom'
-import {Row,Col, ListGroup,Card,Button,Image, ListGroupItem} from 'react-bootstrap'
+import { useDispatch, useSelector } from 'react-redux'
+import {Form, Row,Col, ListGroup,Card,Button,Image, ListGroupItem} from 'react-bootstrap'
 import Rating from '../components/Rating'
-import axios from 'axios'
-const ProductScreen = ({match}) => {
+import Message from '../components/Message'
+import Loader from '../components/Loader'
+
+import {listProductsDetails} from '../actions/productActions'
+
+const ProductScreen = ({history,match}) => {
+// cart stuff: too see quantity added and all 
+  const [qty,setQty]=useState(0)
+// using redux
+  const dispatch= useDispatch()
+
+// fetching products using redux
+const productDetails=useSelector((state) => state.productDetails)
+const {loading,error,product}= productDetails
+
 
 //   fetching it(products) from backend // 
-   const[product,setProduct]=useState({})
+  //  const[product,setProduct]=useState({})
 
     // whatever we put inside this runs as soon as the component loads 
     useEffect(() => {
-      const fetchProduct = async() => {
-       const {data}=await axios.get(`/api/products/${match.params.id}`)
-      // change from empty array of useStaate 
-      setProduct(data)
-      }
-      fetchProduct()
+      dispatch(listProductsDetails(match.params.id))
+      // const fetchProduct = async() => {
+      //  const {data}=await axios.get(`/api/products/${match.params.id}`)
+      // // change from empty array of useStaate 
+      // setProduct(data)
+      // }
+      // fetchProduct()
       // use array of dependencies i.e anthing that you want to fire use effect off when it changes 
-  }, [match])
+  }, [dispatch,match])
 
-   
+
+// handlers defined here 
+
+const addToCartHandler =() =>{
+   history.push(`/cart/${match.params.id}?qty=${qty}`)
+}
+
     return (
         <>
         {/* for go back button to the main page */}
        <Link className="btn btn-light my-3" to='/'>
            Go Back
        </Link>
-       <Row>
+       {loading ?<Loader/>:error?<Message variant='danger'>{error}</Message>:
+       
+        <Row>
        <Col md={4}>
        {/* adding name and image of the product to be sold */}
           <Image src={product.image} alt ={product.name} fluid/>
@@ -84,17 +107,49 @@ const ProductScreen = ({match}) => {
            </Row>
          </ListGroup>
 
+         { /* show this only if there is a stock */ }
+         {
+           product.countInStock>0 && (
+           <ListGroup.Item>
+           <Row>
+             <Col>Qty</Col>
+             <Col>
+               <Form.Control 
+                as='select'
+                value={qty} 
+                onChange={(e)=>
+               setQty(e.target.value)}
+               >
+             {
+               [...Array(product.countInStock).keys()].map((x) => (
+                 <option key={x+1} value={x+1}>
+                   {x+1}
+                 </option>
+               ))
+             }
+               </Form.Control>
+             </Col>
+           </Row>
+           </ListGroup.Item>
+         )}
+
          <ListGroupItem>
-             <Button className="btn-block" type="button" 
+             <Button 
+             onClick={addToCartHandler}
+             className="btn-block" 
+             type="button" 
              disabled={product.countInStock === 0}>
              Add To Cart
              </Button>
          </ListGroupItem>
-       </Card>
-       </Col>
-       </Row>
+      </Card>
+     </Col>
+     </Row>
+       
+       }
+       
        </>
-    )
-}
+    
+    )}
 
 export default ProductScreen
